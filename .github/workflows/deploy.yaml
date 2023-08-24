@@ -12,16 +12,18 @@ jobs:
       - run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
       - run: docker build -t loyhongshenggg/react-test -f ./client/Dockerfile.dev ./client
       - run: docker run -e CI=true loyhongshenggg/react-test npm test
-  
+
+      # we build our image with tag loyhongshengg/... first
       - run: docker build -t loyhongshenggg/multi-client-10-14 ./client
       - run: docker build -t loyhongshenggg/multi-nginx-10-14 ./nginx
       - run: docker build -t loyhongshenggg/multi-server-10-14 ./server
       - run: docker build -t loyhongshenggg/multi-worker-10-14 ./worker
   
+      # we want to push to docker for deployment to EB
       - run: docker push loyhongshenggg/multi-client-10-14
       - run: docker push loyhongshenggg/multi-nginx-10-14
       - run: docker push loyhongshenggg/multi-server-10-14
-      - run: docker push loyhongshenggg/multi-worker-10-14
+      - run: docker push loyhongshenggg/multi-worker-10-14 
   
       - name: Generate deployment package
         run: zip -r deploy.zip . -x '*.git*'
