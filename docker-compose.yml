@@ -1,32 +1,29 @@
 version: '3'
-services: 
+services:
   postgres:
-    image: "postgres:latest"
+    image: 'postgres:latest'
     environment:
       - POSTGRES_PASSWORD=postgres_password
-  redis: 
+  redis:
     image: 'redis:latest'
   nginx:
-    restart: always #no matter what we want nginx working
+    depends_on:
+      - api
+      - client
+    restart: always
     build:
       dockerfile: Dockerfile.dev
       context: ./nginx
-    ports: #port mapping in dev mode for us to use our browser to access container
+    ports:
       - '3050:80'
   api:
-    build: 
+    build:
       dockerfile: Dockerfile.dev
       context: ./server
     volumes:
-      # we do this because we don't want this folder to be overridden
-      - /home/node/app/node_modules 
-      # this is to look at server directory and copy everything inside into the
-      # app folder of the container!
-      # so now anytime our application tries to access anything in app folder, will be redirected to server folder
-      # therefore we don't need to rebuild our image and still can see the changes!
-      - ./server:/home/node/app
+      - /app/node_modules
+      - ./server:/app
     environment:
-    # CHECK THE DOCKERHUB WEBSITE FOR DEFAULT PORTS/USER/PASSWORDS
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - PGUSER=postgres
@@ -35,19 +32,21 @@ services:
       - PGPASSWORD=postgres_password
       - PGPORT=5432
   client:
+    environment:
+      - WDS_SOCKET_PORT=0
     build:
       dockerfile: Dockerfile.dev
       context: ./client
     volumes:
-      - /home/node/app/node_modules
-      - ./client:/home/node/app 
+      - /app/node_modules
+      - ./client:/app
   worker:
     build:
       dockerfile: Dockerfile.dev
       context: ./worker
     volumes:
-      - /home/node/app/node_modules
-      - ./worker:/home/node/app 
+      - /app/node_modules
+      - ./worker:/app
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379

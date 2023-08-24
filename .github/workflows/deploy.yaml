@@ -2,8 +2,8 @@ name: Deploy MultiDocker
 on:
   push:
     branches:
-      - master # check your repo, your default branch might be master!
-  
+      - main # check your repo, your default branch might be master!
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,29 +13,12 @@ jobs:
       - run: docker build -t loyhongshenggg/react-test -f ./client/Dockerfile.dev ./client
       - run: docker run -e CI=true loyhongshenggg/react-test npm test
 
-      # we build our image with tag loyhongshengg/... first
-      - run: docker build -t loyhongshenggg/multi-client-10-14 ./client
-      - run: docker build -t loyhongshenggg/multi-nginx-10-14 ./nginx
-      - run: docker build -t loyhongshenggg/multi-server-10-14 ./server
-      - run: docker build -t loyhongshenggg/multi-worker-10-14 ./worker
-  
-      # we want to push to docker for deployment to EB
-      - run: docker push loyhongshenggg/multi-client-10-14
-      - run: docker push loyhongshenggg/multi-nginx-10-14
-      - run: docker push loyhongshenggg/multi-server-10-14
-      - run: docker push loyhongshenggg/multi-worker-10-14 
-  
-      - name: Generate deployment package
-        run: zip -r deploy.zip . -x '*.git*'
-  
-      - name: Deploy to EB
-        uses: einaregilsson/beanstalk-deploy@v18
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_key: ${{ secrets.AWS_SECRET_KEY }}
-          application_name: multi-gh
-          environment_name: Multigh-env
-          existing_bucket_name: elasticbeanstalk-us-east-1-923445559289
-          region: us-east-1
-          version_label: ${{ github.sha }}
-          deployment_package: deploy.zip
+      - run: docker build -t loyhongshenggg/multi-client ./client
+      - run: docker build -t loyhongshenggg/multi-nginx ./nginx
+      - run: docker build -t loyhongshenggg/multi-server ./server
+      - run: docker build -t loyhongshenggg/multi-worker ./worker
+
+      - run: docker push loyhongshenggg/multi-client
+      - run: docker push loyhongshenggg/multi-nginx
+      - run: docker push loyhongshenggg/multi-server
+      - run: docker push loyhongshenggg/multi-worker
